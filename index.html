@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>亚马逊运营分析作品集 · 周晨阳</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<script src="https://fastly.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<style>
+:root{
+  --ink:#202823; --sub:#5b665f; --line:#e6e3da; --bg:#f6f5f1; --card:#ffffff;
+  --green:#2f6f5e; --green-d:#1f3a31; --green-l:#e7f0ec; --amber:#b4552d; --amber-l:#f6e9e2;
+  --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  --sans:'Noto Sans SC',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.6}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+header.top{background:var(--green-d);color:#fff;padding:26px 0 20px}
+header.top h1{font-size:22px;font-weight:700;letter-spacing:.5px}
+header.top p{color:#c9d8d1;font-size:13px;margin-top:6px}
+nav.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-top:16px}
+nav.tabs a{color:#d8e4de;text-decoration:none;font-size:13px;padding:7px 14px;border-radius:8px;border:1px solid transparent}
+nav.tabs a.active{background:#fff;color:var(--green-d);font-weight:600}
+nav.tabs a:hover{background:rgba(255,255,255,.1)}
+.view{display:none;padding:26px 0 60px}
+.view.active{display:block}
+.badge{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;background:var(--green-l);color:var(--green)}
+.badge.warn{background:var(--amber-l);color:var(--amber)}
+.notice{background:#fff8ec;border-left:3px solid var(--amber);padding:12px 16px;border-radius:0 10px 10px 0;font-size:12.5px;color:#6b5344;margin:16px 0}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.kpi .label{font-size:12px;color:var(--sub)}
+.kpi .value{font-family:var(--mono);font-size:24px;font-weight:600;margin-top:4px}
+.kpi .delta{font-size:11.5px;color:var(--sub);margin-top:4px}
+.kpi .delta.up{color:var(--green)} .kpi .delta.down{color:var(--amber)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+.card h3{font-size:15px;font-weight:600;margin-bottom:4px}
+.card .desc{font-size:12px;color:var(--sub);margin-bottom:12px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chart{width:100%;height:300px}
+.chart.tall{height:360px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--sub);font-weight:500;font-size:11.5px}
+td.num,th.num{text-align:right;font-family:var(--mono)}
+tr:hover td{background:#faf9f5}
+.tag{font-size:11px;padding:2px 8px;border-radius:6px}
+.tag.g{background:var(--green-l);color:var(--green)}
+.tag.y{background:#fbf3df;color:#8a6d1f}
+.tag.r{background:var(--amber-l);color:var(--amber)}
+.cover-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:22px 0}
+.cover-meta .card{margin-bottom:0}
+.cover-meta h4{font-size:13px;margin-bottom:8px;color:var(--green-d)}
+.cover-meta li{font-size:12.5px;color:var(--sub);margin-left:16px;margin-bottom:5px}
+.src{font-size:11.5px;color:var(--sub);margin-top:10px}
+.src li{margin-left:16px;margin-bottom:3px}
+.section-title{font-size:17px;font-weight:700;margin:6px 0 4px}
+.section-sub{font-size:12.5px;color:var(--sub);margin-bottom:16px}
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.grid-2{grid-template-columns:1fr}.cover-meta{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <h1>亚马逊运营分析作品集</h1>
+    <p>Home Improvement · 五金工具套装 · 美国站 ｜ 运营数据分析案例</p>
+    <nav class="tabs" id="tabs"></nav>
+  </div>
+</header>
+<div class="wrap">
+
+  <!-- ===== 封面 ===== -->
+  <section class="view" id="view-cover">
+    <div class="section-title">项目说明</div>
+    <div class="section-sub">本作品集围绕亚马逊精品运营全链路，呈现选品调研、Listing 与流量诊断、广告投放复盘、库存与 FBA 周转、口碑维护六个分析模块。</div>
+    <div class="notice">
+      数据口径声明：店铺明细为按公开行业基准规律建模的演示数据，用于展示分析框架与指标拆解方法，<b>非任何真实店铺的经营业绩</b>；页面中的行业基准区间引自公开报告，来源见页末。
+    </div>
+    <div class="cover-meta">
+      <div class="card"><h4>分析类目</h4><ul>
+        <li>Home Improvement / Hand Tools</li><li>五金工具套装、家用工具组</li><li>美国站，18 个 SKU，12 个月周期</li>
+      </ul></div>
+      <div class="card"><h4>核心方法</h4><ul>
+        <li>竞品与市场容量调研（卖家精灵口径）</li><li>漏斗诊断与关键词排名复盘</li><li>SP/SB/SD 广告结构与 ACoS/TACoS 复盘</li><li>IPI、WOC 库存周转分层与备货建议</li>
+      </ul></div>
+      <div class="card"><h4>工具与数据</h4><ul>
+        <li>Excel / SQL / Python（Pandas）/ Tableau 口径</li><li>ECharts 可视化，指标可追溯到原始报表</li><li>基准对照：类目均值 vs 本店表现</li>
+      </ul></div>
+    </div>
+    <div class="card">
+      <h3>公开基准与口径来源</h3>
+      <ul class="src">
+        <li>SellerApp《2026 Advertising Benchmark Report》：分品类 ACoS / TACoS / CTR / CVR / CPC / ROAS 区间</li>
+        <li>Triple Whale Amazon Benchmarks 2026：类目 ROAS、AOV、CVR、CTR、CPA 均值对照</li>
+        <li>亚马逊卖家中心官方帮助：IPI 库存绩效阈值（&gt;450 良好 / &gt;550 优秀 / &lt;350 仓储限制）与 FBA 库存周转口径</li>
+        <li>卖家精灵选品调研指南：市场容量、评论壁垒、价格带与差异化空间的判断方法口径</li>
+      </ul>
+      <p class="src" style="margin-top:8px">说明：本店演示数值按上述公开基准的合理区间建模；指标定义（ACoS＝广告花费/广告销售额，TACoS＝广告花费/总销售额，WOC＝现有库存/周均销量）采用行业通用口径。</p>
+    </div>
+  </section>
+
+  <!-- ===== 1. 经营总览 ===== -->
+  <section class="view" id="view-overview">
+    <div class="section-title">经营总览</div>
+    <div class="section-sub">近 30 天核心经营指标，并与 Home &amp; Kitchen 类目公开基准对照。</div>
+    <div class="kpi-grid" id="kpiGrid"></div>
+    <div class="grid-2">
+      <div class="card"><h3>12 个月 GMV 与广告投入</h3><div class="desc">柱：GMV（千美元）；折线：广告花费（千美元）与 TACoS（%）</div><div id="chartTrend" class="chart tall"></div></div>
+      <div class="card"><h3>本店 vs 类目基准</h3><div class="desc">CVR / CTR / ACoS / 毛利率，基准区间取 Home &amp; Kitchen 公开报告</div><div id="chartBench" class="chart tall"></div></div>
+    </div>
+  </section>
+
+  <!-- ===== 2. 选品与竞品 ===== -->
+  <section class="view" id="view-product">
+    <div class="section-title">选品与竞品分析</div>
+    <div class="section-sub">竞品短名单、竞争象限与选品五维评分；市场容量、垄断度与评论依赖度判断切入缝隙。</div>
+    <div class="card">
+      <h3>竞品短名单（5 个代表 ASIN）</h3><div class="desc">价格、评论数、评分、估算月销、BSR 与毛利估算；成熟爆款 / 新品黑马 / 中游竞品分层对比。</div>
+      <div id="compTable"></div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><h3>竞争象限：评论壁垒 × 需求规模</h3><div class="desc">横轴：累计评论数（竞争壁垒）；纵轴：估算月销（需求）；气泡大小＝售价</div><div id="chartQuad" class="chart"></div></div>
+      <div class="card"><h3>目标新品选品五维评分</h3><div class="desc">市场容量、竞争强度、利润空间、差异化空间、供应链成熟度（满分 100）</div><div id="chartScore" class="chart"></div></div>
+    </div>
+  </section>
+
+  <!-- ===== 3. Listing 与流量 ===== -->
+  <section class="view" id="view-listing">
+    <div class="section-title">Listing 与流量诊断</div>
+    <div class="section-sub">转化漏斗、关键词排名与 Listing 要素诊断，定位卡在哪一环。</div>
+    <div class="grid-2">
+      <div class="card"><h3>流量转化漏斗（近 30 天）</h3><div class="desc">曝光 → 点击 → 加购 → 下单；CTR＝点击/曝光，点击 CVR＝下单/点击</div><div id="chartFunnel" class="chart tall"></div></div>
+      <div class="card"><h3>核心关键词排名</h3><div class="desc">自然搜索排名与主要广告位；排名越靠前数值越小</div><div id="chartKw" class="chart tall"></div></div>
+    </div>
+    <div class="card"><h3>Listing 要素诊断</h3><div class="desc">标题、五点、主图、A+、后台关键词、价格竞争力分项评分（满分 10）</div><div id="chartListing" class="chart"></div></div>
+  </section>
+
+  <!-- ===== 4. 广告复盘 ===== -->
+  <section class="view" id="view-ads">
+    <div class="section-title">站内广告复盘</div>
+    <div class="section-sub">SP / SB / SD 分类型效率，ACoS 与 TACoS 走势，关键词矩阵与否词建议。</div>
+    <div class="kpi-grid" id="adKpi"></div>
+    <div class="grid-2">
+      <div class="card"><h3>分广告类型效率</h3><div class="desc">ACoS 与 ROAS 对照；SP 跑词收单、SB 打品牌词、SD 做再营销与竞品定位</div><div id="chartAdType" class="chart"></div></div>
+      <div class="card"><h3>ACoS 与 TACoS 走势</h3><div class="desc">ACoS 下降且 TACoS 同步回落，说明广告在带动自然排名；若 ACoS 平而 TACoS 升，则依赖付费流量</div><div id="chartAdTacos" class="chart"></div></div>
+    </div>
+    <div class="card">
+      <h3>关键词矩阵与处置建议</h3><div class="desc">按曝光、点击、CPC、订单与 ACoS 分层：放量 / 观察 / 优化否词</div>
+      <div id="kwTable"></div>
+    </div>
+  </section>
+
+  <!-- ===== 5. 库存与 FBA ===== -->
+  <section class="view" id="view-inventory">
+    <div class="section-title">库存与 FBA 周转</div>
+    <div class="section-sub">IPI 库存绩效、可维持销售周数（WOC）分层与 SKU 备货建议。</div>
+    <div class="kpi-grid" id="invKpi"></div>
+    <div class="grid-2">
+      <div class="card"><h3>IPI 库存绩效</h3><div class="desc">&gt;450 良好，&gt;550 优秀，&lt;350 面临仓储限制（亚马逊官方口径）</div><div id="chartIpi" class="chart"></div></div>
+      <div class="card"><h3>SKU 按 WOC 分桶</h3><div class="desc">健康区间 4–8 周；&lt;4 周缺货风险，&gt;8 周冗余积压</div><div id="chartWoc" class="chart"></div></div>
+    </div>
+    <div class="card">
+      <h3>代表 SKU 周转与备货建议</h3><div class="desc">周销、现有库存、在途、WOC 与处置动作</div>
+      <div id="skuTable"></div>
+    </div>
+    <div class="card"><h3>费用结构（占 GMV）</h3><div class="desc">平台佣金约 15%；FBA 配送与头程为主要履约成本；毛利在扣除广告前口径</div><div id="chartFee" class="chart"></div></div>
+  </section>
+
+  <!-- ===== 6. 口碑与复盘 ===== -->
+  <section class="view" id="view-reviews">
+    <div class="section-title">口碑与复盘改进</div>
+    <div class="section-sub">星级分布、差评归因、好评标签与退货率趋势，输出闭环改进项。</div>
+    <div class="grid-2">
+      <div class="card"><h3>星级分布</h3><div class="desc">近 90 天 Review 星级占比</div><div id="chartStar" class="chart"></div></div>
+      <div class="card"><h3>差评归因</h3><div class="desc">1–3 星评价问题归类，定位需反哺产品与 Listing 的环节</div><div id="chartNeg" class="chart"></div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><h3>好评标签</h3><div class="desc">高频正向反馈，可提炼为 Listing 卖点</div><div id="chartPos" class="chart"></div></div>
+      <div class="card"><h3>退货率趋势（近 6 个月）</h3><div class="desc">类目可接受区间一般 &lt;10%</div><div id="chartReturn" class="chart"></div></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ============ 演示数据（按公开基准建模，非真实经营数据） ============ */
+const RAW = {
+  months: ['M1','M2','M3','M4','M5','M6','M7','M8','M9','M10','M11','M12'],
+  gmv: [18.2,20.5,22.1,24.8,27.3,30.6,33.9,37.2,41.5,46.8,52.6,58.4],
+  adSpend: [3.1,3.4,3.7,4.1,4.4,4.9,5.3,5.7,6.1,6.6,7.1,7.5],
+  acos: [38.2,36.5,35.1,33.8,32.4,31.0,29.8,28.6,27.4,26.2,25.1,24.3],
+  tacos: [17.0,16.6,16.1,15.6,15.0,14.5,13.9,13.3,12.7,12.1,11.6,11.2],
+  kpi: [
+    {label:'近 30 天 GMV', value:'$58.4K', delta:'环比 +11.0%', cls:'up'},
+    {label:'订单量', value:'1,682', delta:'环比 +9.4%', cls:'up'},
+    {label:'客单价 AOV', value:'$34.7', delta:'类目均值 $39.9', cls:''},
+    {label:'会话 Sessions', value:'13,950', delta:'环比 +7.8%', cls:'up'},
+    {label:'转化率 CVR', value:'12.1%', delta:'基准 12–16%', cls:'up'},
+    {label:'毛利率（扣履约/平台费）', value:'38.1%', delta:'目标毛利 30%+', cls:'up'},
+    {label:'广告销售占比', value:'31.0%', delta:'SP 为主力', cls:''},
+    {label:'TACoS', value:'11.2%', delta:'健康区间 10–15%', cls:'up'}
+  ]
+};
+
+const COMP = [
+  {asin:'B0C1PRO01', name:'ProTool 家用工具套装', price:36.99, reviews:1240, rating:4.5, sales:860, bsr:128, margin:'38%', pos:'成熟爆款'},
+  {asin:'B0CHFIX02', name:'HomeFix 维修工具组', price:29.99, reviews:612, rating:4.4, sales:520, bsr:342, margin:'34%', pos:'中游竞品'},
+  {asin:'B0CQICK03', name:'QuickTools 基础套装', price:24.99, reviews:286, rating:4.3, sales:310, bsr:765, margin:'31%', pos:'中游竞品'},
+  {asin:'B0CNOVA04', name:'NovaTool 迷你工具组', price:19.99, reviews:86, rating:4.6, sales:195, bsr:1204, margin:'29%', pos:'新品黑马'},
+  {asin:'B0CSTEEL05', name:'SteelCraft 专业组', price:32.99, reviews:430, rating:4.2, sales:260, bsr:891, margin:'26%', pos:'评分偏低'}
+];
+
+const SCORE = { dims:['市场容量','竞争强度','利润空间','差异化空间','供应链'], vals:[78,62,74,66,80] };
+
+const FUNNEL = [
+  {name:'曝光', value:1286000}, {name:'点击', value:7845},
+  {name:'加购', value:2210}, {name:'下单', value:1682}
+];
+
+const KWRANK = [
+  {kw:'household tool kit', org:12, ad:'SP Top'},
+  {kw:'tool set for home', org:21, ad:'SP'},
+  {kw:'basic mechanics tools', org:34, ad:'SB'},
+  {kw:'hand tool kit', org:58, ad:'SD'},
+  {kw:'compact tool box', org:46, ad:'SP'}
+];
+
+const LISTING_DIAG = [['标题',8.5],['五点描述',8],['主图',7.5],['A+ 页面',7],['后台关键词',8],['价格竞争力',7.5]];
+
+const ADTYPE = [
+  {type:'SP', spend:5.12, sales:17.9, acos:28.6, roas:3.50, ctr:0.62, cvr:12.8, cpc:0.98},
+  {type:'SB', spend:1.45, sales:5.6, acos:25.9, roas:3.86, ctr:0.54, cvr:11.2, cpc:1.05},
+  {type:'SD', spend:0.93, sales:2.8, acos:33.2, roas:3.01, ctr:0.48, cvr:9.6, cpc:0.86}
+];
+
+const ADKPI = [
+  {label:'广告花费', value:'$7.50K', delta:'环比 +5.6%', cls:''},
+  {label:'广告销售额', value:'$26.3K', delta:'环比 +8.2%', cls:'up'},
+  {label:'整体 ACoS', value:'28.5%', delta:'基准 25–30%', cls:''},
+  {label:'综合 ROAS', value:'3.51x', delta:'类目均值约 3.1x', cls:'up'},
+  {label:'平均 CTR', value:'0.58%', delta:'基准 0.5–0.7%', cls:'up'},
+  {label:'平均 CPC', value:'$0.97', delta:'类目 $0.80–1.10', cls:''}
+];
+
+const KWMATRIX = [
+  {kw:'household tool kit', match:'精准', imp:48200, clk:312, cpc:1.02, ord:41, acos:24.1, st:'g'},
+  {kw:'tool set for home', match:'词组', imp:61400, clk:368, cpc:0.94, ord:38, acos:26.8, st:'y'},
+  {kw:'basic mechanics tools', match:'精准', imp:22100, clk:158, cpc:1.10, ord:19, acos:27.5, st:'y'},
+  {kw:'hand tools kit', match:'广泛', imp:88600, clk:402, cpc:0.88, ord:22, acos:38.4, st:'y'},
+  {kw:'toolbox tools', match:'词组', imp:15400, clk:96, cpc:0.92, ord:6, acos:41.2, st:'r'},
+  {kw:'power tool adapter', match:'广泛', imp:9200, clk:74, cpc:0.85, ord:1, acos:58.0, st:'r'},
+  {kw:'mini tool kit gift', match:'精准', imp:12800, clk:88, cpc:0.90, ord:11, acos:22.7, st:'g'},
+  {kw:'craft tool set', match:'词组', imp:18600, clk:112, cpc:0.95, ord:10, acos:30.1, st:'y'}
+];
+
+const INVKPI = [
+  {label:'IPI 库存绩效', value:'468', delta:'>450 良好', cls:'up'},
+  {label:'健康 SKU', value:'13', delta:'WOC 4–8 周', cls:'up'},
+  {label:'缺货风险 SKU', value:'2', delta:'需加急补货', cls:'down'},
+  {label:'冗余 SKU', value:'3', delta:'促销/清仓', cls:'down'},
+  {label:'平均 WOC', value:'6.1 周', delta:'健康区间 4–8 周', cls:'up'},
+  {label:'有货率', value:'96.5%', delta:'畅销品不断货', cls:'up'}
+];
+
+const WOC = [{name:'缺货风险 <4周', value:2},{name:'健康 4–8周', value:13},{name:'冗余 >8周', value:3}];
+
+const SKUTAB = [
+  {sku:'SKU-01', weekly:42, stock:168, inbound:120, woc:4.0, st:'r', act:'在途加急，优先入仓'},
+  {sku:'SKU-02', weekly:35, stock:210, inbound:80, woc:6.0, st:'g', act:'按周销节奏补货'},
+  {sku:'SKU-03', weekly:28, stock:196, inbound:0, woc:7.0, st:'g', act:'观察，暂缓追加订单'},
+  {sku:'SKU-04', weekly:18, stock:158, inbound:0, woc:8.8, st:'y', act:'Coupon 促销动销，控制补货'},
+  {sku:'SKU-05', weekly:12, stock:130, inbound:0, woc:10.8, st:'r', act:'降价/移除订单，清理冗余'},
+  {sku:'SKU-06', weekly:24, stock:58, inbound:100, woc:2.4, st:'r', act:'在途加急，保障不断货'}
+];
+
+const FEE = { names:['商品成本','头程物流','平台佣金','FBA 配送','仓储','广告','其他','毛利'], vals:[28.0,5.5,15.0,11.0,2.4,12.8,1.5,23.8] };
+
+const STAR = [{name:'5 星', value:62},{name:'4 星', value:24},{name:'3 星', value:8},{name:'2 星', value:4},{name:'1 星', value:2}];
+const NEG = [['尺寸/规格不符',31],['产品质量',26],['物流包装',18],['描述不符',14],['配件缺失',7],['其他',4]];
+const POS = [['坚固耐用',28],['性价比高',22],['配件齐全',19],['上手简单',16],['包装完好',15]];
+const RET = [9.1,8.6,8.9,8.4,8.5,8.2];
+
+/* ============ 通用 ============ */
+const VIEWS = [
+  {id:'cover', label:'项目说明'},
+  {id:'overview', label:'经营总览'},
+  {id:'product', label:'选品与竞品'},
+  {id:'listing', label:'Listing 与流量'},
+  {id:'ads', label:'广告复盘'},
+  {id:'inventory', label:'库存与 FBA'},
+  {id:'reviews', label:'口碑复盘'}
+];
+const C = {green:'#2f6f5e', greenL:'#7fb3a3', amber:'#b4552d', ink:'#202823', sub:'#8a938d', line:'#e6e3da', blue:'#3d6b8c'};
+const inst = {};
+const mono = 'JetBrains Mono, Consolas, monospace';
+
+function el(id){return document.getElementById(id);}
+function kpiGrid(node, items){
+  node.innerHTML = items.map(k=>`
+    <div class="kpi">
+      <div class="label">${k.label}</div>
+      <div class="value">${k.value}</div>
+      <div class="delta ${k.cls||''}">${k.delta}</div>
+    </div>`).join('');
+}
+function baseChart(){
+  return {textStyle:{fontFamily:'Noto Sans SC, sans-serif'}, grid:{left:48,right:24,top:36,bottom:36},
+    tooltip:{trigger:'axis', textStyle:{fontSize:12}},
+    xAxis:{type:'category', axisLine:{lineStyle:{color:C.line}}, axisLabel:{color:C.sub}},
+    yAxis:{type:'value', splitLine:{lineStyle:{color:C.line}}, axisLabel:{color:C.sub}}};
+}
+function mk(id){
+  if(!inst[id]) inst[id] = echarts.init(el(id));
+  return inst[id];
+}
+
+/* ============ 静态卡片与表格 ============ */
+function renderStatic(){
+  kpiGrid(el('kpiGrid'), RAW.kpi);
+  kpiGrid(el('adKpi'), ADKPI);
+  kpiGrid(el('invKpi'), INVKPI);
+
+  el('compTable').innerHTML = `<table><thead><tr>
+    <th>ASIN / 商品</th><th class="num">售价</th><th class="num">评论数</th><th class="num">评分</th>
+    <th class="num">估算月销</th><th class="num">BSR</th><th class="num">毛利估算</th><th>定位</th></tr></thead><tbody>
+    ${COMP.map(c=>`<tr>
+      <td>${c.asin}<br><span style="color:var(--sub)">${c.name}</span></td>
+      <td class="num">$${c.price.toFixed(2)}</td><td class="num">${c.reviews}</td>
+      <td class="num">${c.rating.toFixed(1)}</td><td class="num">${c.sales}</td>
+      <td class="num">#${c.bsr}</td><td class="num">${c.margin}</td>
+      <td><span class="tag ${c.pos==='新品黑马'?'g':c.pos==='评分偏低'?'r':'y'}">${c.pos}</span></td></tr>`).join('')}
+  </tbody></table>`;
+
+  el('kwTable').innerHTML = `<table><thead><tr>
+    <th>关键词</th><th>匹配</th><th class="num">曝光</th><th class="num">点击</th><th class="num">CPC</th>
+    <th class="num">订单</th><th class="num">ACoS</th><th>处置</th></tr></thead><tbody>
+    ${KWMATRIX.map(k=>`<tr>
+      <td>${k.kw}</td><td>${k.match}</td>
+      <td class="num">${k.imp.toLocaleString()}</td><td class="num">${k.clk}</td>
+      <td class="num">$${k.cpc.toFixed(2)}</td><td class="num">${k.ord}</td>
+      <td class="num">${k.acos.toFixed(1)}%</td>
+      <td><span class="tag ${k.st==='g'?'g':k.st==='y'?'y':'r'}">${k.st==='g'?'放量':k.st==='y'?'观察':'否词/优化'}</span></td></tr>`).join('')}
+  </tbody></table>`;
+
+  el('skuTable').innerHTML = `<table><thead><tr>
+    <th>SKU</th><th class="num">周销</th><th class="num">现有库存</th><th class="num">在途</th>
+    <th class="num">WOC(周)</th><th>状态</th><th>备货建议</th></tr></thead><tbody>
+    ${SKUTAB.map(s=>`<tr>
+      <td>${s.sku}</td><td class="num">${s.weekly}</td><td class="num">${s.stock}</td>
+      <td class="num">${s.inbound}</td><td class="num">${s.woc.toFixed(1)}</td>
+      <td><span class="tag ${s.st==='g'?'g':s.st==='y'?'y':'r'}">${s.st==='g'?'健康':s.st==='y'?'冗余观察':'风险'}</span></td>
+      <td>${s.act}</td></tr>`).join('')}
+  </tbody></table>`;
+}
+
+/* ============ 图表 ============ */
+function chartOverview(){
+  const t = baseChart();
+  t.legend = {top:0, textStyle:{color:C.sub}};
+  t.yAxis = [{type:'value', name:'$K', splitLine:{lineStyle:{color:C.line}}},
+             {type:'value', name:'%', splitLine:{show:false}}];
+  t.series = [
+    {name:'GMV', type:'bar', data:RAW.gmv, itemStyle:{color:C.greenL}, barWidth:'38%'},
+    {name:'广告花费', type:'bar', data:RAW.adSpend, itemStyle:{color:C.blue}, barWidth:'38%'},
+    {name:'TACoS', type:'line', yAxisIndex:1, data:RAW.tacos, smooth:true, itemStyle:{color:C.amber}, lineStyle:{width:2}}
+  ];
+  t.xAxis = {type:'category', data:RAW.months, axisLabel:{color:C.sub}};
+  mk('chartTrend').setOption(t);
+
+  const b = baseChart();
+  b.legend = {top:0, textStyle:{color:C.sub}};
+  b.series = [
+    {name:'本店', type:'bar', data:[12.1,0.61,24.3,38.1], itemStyle:{color:C.green}, barWidth:'30%'},
+    {name:'类目基准中值', type:'bar', data:[14,0.6,27.5,35], itemStyle:{color:C.sub}, barWidth:'30%'}
+  ];
+  b.xAxis = {type:'category', data:['CVR(%)','CTR(%)','ACoS(%)','毛利率(%)'], axisLabel:{color:C.sub}};
+  mk('chartBench').setOption(b);
+}
+
+function chartProduct(){
+  const q = baseChart();
+  q.grid = {left:60,right:30,top:20,bottom:40};
+  q.xAxis = {type:'value', name:'评论数', axisLabel:{color:C.sub}};
+  q.yAxis = {type:'value', name:'估算月销', axisLabel:{color:C.sub}};
+  q.series = [{type:'scatter', data:COMP.map(c=>({value:[c.reviews,c.sales,c.price,c.name]})),
+    symbolSize:v=>Array.isArray(v)?v[2]*3.2:12, itemStyle:{color:'rgba(47,111,94,.75)'},
+    label:{show:true, formatter:p=>p.value[3].split(' ')[0], position:'top', color:C.sub, fontSize:10}}];
+  q.tooltip = {formatter:p=>`${p.value[3]}<br>评论 ${p.value[0]} ｜ 月销 ${p.value[1]} ｜ $${p.value[2]}`};
+  mk('chartQuad').setOption(q);
+
+  const r = {
+    radar:{indicator:SCORE.dims.map(d=>({name:d, max:100})), radius:'62%',
+      axisName:{color:C.sub}, splitLine:{lineStyle:{color:C.line}}, splitArea:{areaStyle:{color:['#fff','#f7f6f1']}}},
+    series:[{type:'radar', data:[{value:SCORE.vals.slice(), name:'选品评分', areaStyle:{color:'rgba(47,111,94,.2)'}, lineStyle:{color:C.green}, itemStyle:{color:C.green}}]}]
+  };
+  mk('chartScore').setOption(r);
+}
+
+function chartListing(){
+  const f = {
+    tooltip:{trigger:'item', formatter:'{b}: {c}'},
+    series:[{type:'funnel', left:'10%', width:'80%', minSize:'28%',
+    label:{color:C.ink, formatter:'{b}  {c}'}, itemStyle:{borderColor:'#fff', borderWidth:2},
+    color:[C.greenL, C.green, C.blue, C.amber],
+    data:FUNNEL}]};
+  mk('chartFunnel').setOption(f);
+
+  const k = baseChart();
+  k.grid = {left:150,right:40,top:16,bottom:30};
+  k.xAxis = {type:'value', inverse:true, min:0, max:60, name:'自然排名', axisLabel:{color:C.sub}};
+  k.yAxis = {type:'category', data:KWRANK.map(x=>x.kw), axisLabel:{color:C.sub, fontSize:11}};
+  k.series = [{type:'bar', data:KWRANK.map(x=>x.org), itemStyle:{color:C.green}, barWidth:'55%',
+    label:{show:true, position:'right', color:C.sub, formatter:p=>`#${p.value}  ${KWRANK[p.dataIndex].ad}`}}];
+  mk('chartKw').setOption(k);
+
+  const l = baseChart();
+  l.grid = {left:110,right:40,top:16,bottom:30};
+  l.xAxis = {type:'value', max:10, axisLabel:{color:C.sub}};
+  l.yAxis = {type:'category', data:LISTING_DIAG.map(x=>x[0]), axisLabel:{color:C.sub}};
+  l.series = [{type:'bar', data:LISTING_DIAG.map(x=>x[1]), itemStyle:{color:C.blue}, barWidth:'55%',
+    label:{show:true, position:'right', color:C.sub, formatter:'{c}'}}];
+  mk('chartListing').setOption(l);
+}
+
+function chartAds(){
+  const a = baseChart();
+  a.legend = {top:0, textStyle:{color:C.sub}};
+  a.xAxis = {type:'category', data:ADTYPE.map(x=>x.type), axisLabel:{color:C.sub}};
+  a.series = [
+    {name:'ACoS(%)', type:'bar', data:ADTYPE.map(x=>x.acos), itemStyle:{color:C.amber}, barWidth:'30%'},
+    {name:'ROAS(x)', type:'bar', data:ADTYPE.map(x=>x.roas), itemStyle:{color:C.green}, barWidth:'30%'}
+  ];
+  mk('chartAdType').setOption(a);
+
+  const t = baseChart();
+  t.legend = {top:0, textStyle:{color:C.sub}};
+  t.xAxis = {type:'category', data:RAW.months, axisLabel:{color:C.sub}};
+  t.series = [
+    {name:'ACoS', type:'line', smooth:true, data:RAW.acos, itemStyle:{color:C.amber}, lineStyle:{width:2}},
+    {name:'TACoS', type:'line', smooth:true, data:RAW.tacos, itemStyle:{color:C.green}, lineStyle:{width:2}}
+  ];
+  mk('chartAdTacos').setOption(t);
+}
+
+function chartInventory(){
+  const g = {
+    series:[{type:'gauge', min:0, max:1000, progress:{show:true, width:14},
+    axisLine:{lineStyle:{width:14, color:[[.35,'#d98b6b'],[.45,'#e6c96b'],[1,C.green]]}},
+    detail:{fontFamily:mono, fontSize:26, color:C.ink, formatter:'{value}'},
+    data:[{value:468}], title:{color:C.sub, offsetCenter:[0,'85%']} }]};
+  mk('chartIpi').setOption(g);
+
+  const w = baseChart();
+  w.grid = {left:130,right:40,top:16,bottom:30};
+  w.xAxis = {type:'value', axisLabel:{color:C.sub}};
+  w.yAxis = {type:'category', data:WOC.map(x=>x.name), axisLabel:{color:C.sub}};
+  w.series = [{type:'bar', data:WOC.map(x=>x.value), barWidth:'55%',
+    itemStyle:{color:p=>[C.amber,C.green,C.sub][p.dataIndex]},
+    label:{show:true, position:'right', color:C.sub, formatter:'{c} SKU'}}];
+  mk('chartWoc').setOption(w);
+
+  const f = {
+    tooltip:{trigger:'item', formatter:'{b}: {c}%'},
+    series:[{type:'pie', radius:['42%','68%'], center:['50%','52%'],
+    label:{color:C.sub, formatter:'{b}\n{c}%'},
+    color:[C.sub,'#9db8ad',C.blue,'#c9b98a',C.greenL,C.amber,'#b9c4bf',C.green],
+    data:FEE.names.map((n,i)=>({name:n, value:FEE.vals[i]}))}]};
+  mk('chartFee').setOption(f);
+}
+
+function chartReviews(){
+  const s = {
+    series:[{type:'pie', radius:['42%','68%'], center:['50%','52%'],
+    label:{color:C.sub, formatter:'{b} {c}%'},
+    color:[C.green,'#7fb3a3',C.blue,'#c98b6b',C.amber], data:STAR}]};
+  mk('chartStar').setOption(s);
+
+  const n = baseChart();
+  n.grid = {left:120,right:40,top:16,bottom:30};
+  n.xAxis = {type:'value', axisLabel:{color:C.sub}};
+  n.yAxis = {type:'category', data:NEG.map(x=>x[0]), axisLabel:{color:C.sub}};
+  n.series = [{type:'bar', data:NEG.map(x=>x[1]), itemStyle:{color:C.amber}, barWidth:'55%',
+    label:{show:true, position:'right', color:C.sub, formatter:'{c}%'}}];
+  mk('chartNeg').setOption(n);
+
+  const p = baseChart();
+  p.grid = {left:110,right:40,top:16,bottom:30};
+  p.xAxis = {type:'value', axisLabel:{color:C.sub}};
+  p.yAxis = {type:'category', data:POS.map(x=>x[0]), axisLabel:{color:C.sub}};
+  p.series = [{type:'bar', data:POS.map(x=>x[1]), itemStyle:{color:C.greenL}, barWidth:'55%',
+    label:{show:true, position:'right', color:C.sub, formatter:'{c}%'}}];
+  mk('chartPos').setOption(p);
+
+  const r = baseChart();
+  r.xAxis = {type:'category', data:['M1','M2','M3','M4','M5','M6'], axisLabel:{color:C.sub}};
+  r.series = [{type:'line', smooth:true, data:RET, itemStyle:{color:C.blue}, lineStyle:{width:2},
+    areaStyle:{color:'rgba(61,107,140,.12)'}, label:{show:true, color:C.sub, formatter:'{c}%'}}];
+  mk('chartReturn').setOption(r);
+}
+
+const VIEW_CHARTS = {overview:chartOverview, product:chartProduct, listing:chartListing,
+  ads:chartAds, inventory:chartInventory, reviews:chartReviews};
+
+function renderTabs(){
+  el('tabs').innerHTML = VIEWS.map(v=>`<a href="#/${v.id}" data-id="${v.id}">${v.label}</a>`).join('');
+}
+function showView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const node = el('view-'+id);
+  if(node) node.classList.add('active');
+  document.querySelectorAll('#tabs a').forEach(a=>a.classList.toggle('active', a.dataset.id===id));
+  if(VIEW_CHARTS[id]){
+    VIEW_CHARTS[id]();
+    setTimeout(()=>Object.values(inst).forEach(c=>c.resize()), 60);
+  }
+}
+function route(){
+  const h = location.hash.replace('#/','') || 'cover';
+  showView(VIEWS.some(v=>v.id===h)?h:'cover');
+}
+
+renderStatic();
+renderTabs();
+window.addEventListener('hashchange', route);
+window.addEventListener('resize', ()=>Object.values(inst).forEach(c=>c.resize()));
+route();
+
+</script>
+</body>
+</html>
